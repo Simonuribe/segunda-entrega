@@ -1,0 +1,246 @@
+import tkinter as tk
+from tkinter import messagebox
+
+class Producto:
+    def __init__(self, modelo, marca, precio, stock, caracteristicas):
+        self.modelo = modelo
+        self.marca = marca
+        self.precio = precio
+        self.stock = stock
+        self.caracteristicas = caracteristicas
+
+class Venta:
+    def __init__(self, modelo, cantidad_vendida):
+        self.modelo = modelo
+        self.cantidad_vendida = cantidad_vendida
+
+class TiendaCelulares:
+    def __init__(self):
+        self.inventario = []
+        self.ventas = []  # Lista para almacenar las ventas
+
+    def registrar_producto(self, modelo, marca, precio, stock, caracteristicas):
+        # Verificar si ya existe un producto con el mismo modelo en el inventario
+        for producto in self.inventario:
+            if producto.modelo == modelo:
+                return f"El producto '{modelo}' ya existe en el inventario."
+
+        # Si no existe, se registra el producto
+        producto = Producto(modelo, marca, precio, stock, caracteristicas)
+        self.inventario.append(producto)
+        return f"Producto '{modelo}' registrado con éxito."
+
+
+    def actualizar_producto(self, modelo, nuevo_precio, nuevo_stock, nuevas_caracteristicas):
+        for producto in self.inventario:
+            if producto.modelo == modelo:
+                producto.precio = nuevo_precio
+                producto.stock = nuevo_stock
+                producto.caracteristicas = nuevas_caracteristicas
+                return f"Información de '{modelo}' actualizada correctamente."
+        return f"El producto '{modelo}' no se encontró en el inventario."
+
+    def eliminar_producto(self, modelo):
+        for producto in self.inventario:
+            if producto.modelo == modelo:
+                self.inventario.remove(producto)
+                return f"Producto '{modelo}' eliminado del inventario."
+        return f"El producto '{modelo}' no se encontró en el inventario."
+
+    def listar_ventas(self):
+        if not self.ventas:
+            return "No hay ventas registradas."
+        ventas_str = "\n".join([f"Modelo: {venta.modelo}, Cantidad Vendida: {venta.cantidad_vendida}" for venta in self.ventas])
+        return f"Lista de Ventas:\n{ventas_str}"
+
+# Funciones para la interfaz de usuario
+
+def registrar_producto():
+    modelo = modelo_entry.get()
+    marca = marca_entry.get()
+    precio = float(precio_entry.get())
+    stock = int(stock_entry.get())
+    caracteristicas = caracteristicas_entry.get()
+    resultado = tienda.registrar_producto(modelo, marca, precio, stock, caracteristicas)
+    messagebox.showinfo("Resultado", resultado)
+
+def actualizar_producto():
+    modelo = modelo_actualizar_entry.get()
+    nuevo_precio = float(nuevo_precio_entry.get())
+    nuevo_stock = int(nuevo_stock_entry.get())
+    nuevas_caracteristicas = nuevas_caracteristicas_entry.get()
+    resultado = tienda.actualizar_producto(modelo, nuevo_precio, nuevo_stock, nuevas_caracteristicas)
+    messagebox.showinfo("Resultado", resultado)
+
+def eliminar_producto():
+    modelo = modelo_eliminar_entry.get()
+    resultado = tienda.eliminar_producto(modelo)
+    messagebox.showinfo("Resultado", resultado)
+
+def realizar_venta():
+    global modelo_venta_entry, cantidad_venta_entry
+
+    modelo_venta = modelo_venta_entry.get()
+    cantidad_venta = int(cantidad_venta_entry.get())
+
+    producto_encontrado = None
+    for producto in tienda.inventario:
+        if producto.modelo == modelo_venta:
+            producto_encontrado = producto
+            break
+
+    if producto_encontrado is None:
+        resultado = f"No se encontró el producto con modelo '{modelo_venta}'."
+    elif cantidad_venta <= 0:
+        resultado = "La cantidad debe ser mayor que 0."
+    elif cantidad_venta > producto_encontrado.stock:
+        resultado = "No hay suficiente stock disponible para realizar esta venta."
+    else:
+        producto_encontrado.stock -= cantidad_venta
+        resultado = f"Venta de {cantidad_venta} unidades del modelo '{modelo_venta}' realizada con éxito."
+
+        # Registra la venta
+        tienda.ventas.append(Venta(modelo_venta, cantidad_venta))
+
+    messagebox.showinfo("Resultado de la Venta", resultado)
+
+def abrir_ventana_ventas():
+    ventana_ventas = tk.Toplevel(root)
+    ventana_ventas.title("Realizar Venta")
+
+    tk.Label(ventana_ventas, text="Realizar Venta", font=("Arial", 14)).pack()
+
+    tk.Label(ventana_ventas, text="Modelo del Producto:").pack()
+    global modelo_venta_entry
+    modelo_venta_entry = tk.Entry(ventana_ventas)
+    modelo_venta_entry.pack()
+
+    tk.Label(ventana_ventas, text="Cantidad a Vender:").pack()
+    global cantidad_venta_entry
+    cantidad_venta_entry = tk.Entry(ventana_ventas)
+    cantidad_venta_entry.pack()
+
+    tk.Button(ventana_ventas, text="Realizar Venta", command=realizar_venta).pack()
+
+def abrir_ventana_lista_productos():
+    ventana_lista = tk.Toplevel(root)
+    ventana_lista.title("Lista de Productos")
+
+    tk.Label(ventana_lista, text="Lista de Productos", font=("Arial", 14)).pack()
+
+    lista_productos = tk.Listbox(ventana_lista, width=40, height=10)
+    lista_productos.pack()
+
+    for producto in tienda.inventario:
+        lista_productos.insert(tk.END, f"Modelo: {producto.modelo}, Marca: {producto.marca}, Precio: {producto.precio}, Stock: {producto.stock}")
+
+def listar_ventas():
+    resultado = tienda.listar_ventas()
+    messagebox.showinfo("Lista de Ventas", resultado)
+
+root = tk.Tk()
+root.title("Tienda de Celulares")
+
+background_image = tk.PhotoImage(file="fondo1.png")
+
+background_label = tk.Label(root, image=background_image)
+background_label.place(relwidth=1, relheight=1)
+
+modelo_entry = None
+marca_entry = None
+precio_entry = None
+stock_entry = None
+caracteristicas_entry = None
+modelo_actualizar_entry = None
+nuevo_precio_entry = None
+nuevo_stock_entry = None
+nuevas_caracteristicas_entry = None
+modelo_eliminar_entry = None
+modelo_venta_entry = None
+cantidad_venta_entry = None
+
+def abrir_ventana_registro():
+    global modelo_entry, marca_entry, precio_entry, stock_entry, caracteristicas_entry
+
+    ventana_registro = tk.Toplevel(root)
+    ventana_registro.title("Registrar Producto")
+
+    tk.Label(ventana_registro, text="Registrar Producto", font=("Arial", 14)).pack()
+
+    tk.Label(ventana_registro, text="Modelo:").pack()
+    modelo_entry = tk.Entry(ventana_registro)
+    modelo_entry.pack()
+
+    tk.Label(ventana_registro, text="Marca:").pack()
+    marca_entry = tk.Entry(ventana_registro)
+    marca_entry.pack()
+
+    tk.Label(ventana_registro, text="Precio:").pack()
+    precio_entry = tk.Entry(ventana_registro)
+    precio_entry.pack()
+
+    tk.Label(ventana_registro, text="Stock:").pack()
+    stock_entry = tk.Entry(ventana_registro)
+    stock_entry.pack()
+
+    tk.Label(ventana_registro, text="Características:").pack()
+    caracteristicas_entry = tk.Entry(ventana_registro)
+    caracteristicas_entry.pack()
+
+    tk.Button(ventana_registro, text="Registrar", command=registrar_producto).pack()
+
+def abrir_ventana_actualizacion():
+    global modelo_actualizar_entry, nuevo_precio_entry, nuevo_stock_entry, nuevas_caracteristicas_entry
+
+    ventana_actualizacion = tk.Toplevel(root)
+    ventana_actualizacion.title("Actualizar Producto")
+
+    tk.Label(ventana_actualizacion, text="Actualizar Producto", font=("Arial", 14)).pack()
+
+    tk.Label(ventana_actualizacion, text="Modelo a actualizar:").pack()
+    modelo_actualizar_entry = tk.Entry(ventana_actualizacion)
+    modelo_actualizar_entry.pack()
+
+    tk.Label(ventana_actualizacion, text="Nuevo Precio:").pack()
+    nuevo_precio_entry = tk.Entry(ventana_actualizacion)
+    nuevo_precio_entry.pack()
+
+    tk.Label(ventana_actualizacion, text="Nuevo Stock:").pack()
+    nuevo_stock_entry = tk.Entry(ventana_actualizacion)
+    nuevo_stock_entry.pack()
+
+    tk.Label(ventana_actualizacion, text="Nuevas Características:").pack()
+    nuevas_caracteristicas_entry = tk.Entry(ventana_actualizacion)
+    nuevas_caracteristicas_entry.pack()
+
+    tk.Button(ventana_actualizacion, text="Actualizar", command=actualizar_producto).pack()
+
+def abrir_ventana_eliminacion():
+    global modelo_eliminar_entry
+
+    ventana_eliminacion = tk.Toplevel(root)
+    ventana_eliminacion.title("Eliminar Producto")
+
+    tk.Label(ventana_eliminacion, text="Eliminar Producto", font=("Arial", 14)).pack()
+
+    tk.Label(ventana_eliminacion, text="Modelo a eliminar:").pack()
+    modelo_eliminar_entry = tk.Entry(ventana_eliminacion)
+    modelo_eliminar_entry.pack()
+
+    tk.Button(ventana_eliminacion, text="Eliminar", command=eliminar_producto).pack()
+
+
+
+tk.Label(root, text="Bienvenido a la Tienda de Celulares", font=("Arial", 16)).pack()
+tk.Label(root, text="JUAN SIMON URIBE CUELLAR", font=("Arial", 16)).pack()
+tk.Label(root, text="",).pack()
+tk.Label(root, text="",).pack()
+tk.Button(root, text="Registrar Producto", command=abrir_ventana_registro, font=("Arial", 14)).pack()
+tk.Button(root, text="Actualizar Producto", command=abrir_ventana_actualizacion, font=("Arial", 14)).pack()
+tk.Button(root, text="Eliminar Producto", command=abrir_ventana_eliminacion, font=("Arial", 14)).pack()
+tk.Button(root, text="Realizar Venta", command=abrir_ventana_ventas, font=("Arial", 14)).pack()
+tk.Button(root, text="Ver Lista de Productos", command=abrir_ventana_lista_productos, font=("Arial", 14)).pack()
+tk.Button(root, text="Listar Ventas", command=listar_ventas, font=("Arial", 14)).pack()
+
+tienda = TiendaCelulares()
+root.mainloop()
